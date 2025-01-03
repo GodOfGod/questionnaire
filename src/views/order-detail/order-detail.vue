@@ -1,5 +1,5 @@
 <template>
-  <div class="main-title">订单信息</div>
+  <NavBar :show-back-icon="false" title="订单信息"></NavBar>
   <div v-if="orderDetailList.length" class="order-detail-container">
     <div class="detail-item" v-for="item in orderDetailList" :key="item.title">
       <div class="title">{{ item.title }}</div>
@@ -23,6 +23,7 @@
 import { onMounted, computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from '@axios'
+import NavBar from '@/components/nav-bar/nav-bar.vue'
 import type { QuestionnaireResponse } from '@/models/components/questionnair-item'
 import type { QuestionnaireConfigObj } from '@/views/questionnaire/data'
 

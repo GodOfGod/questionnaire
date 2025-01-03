@@ -1,6 +1,6 @@
 <template>
   <div class="nav-bar" :class="{ shadow: showShadow }" @click="handleBack">
-    <div class="back-icon">
+    <div v-if="showBackIcon" class="back-icon">
       <el-icon><ArrowLeft /></el-icon>返回
     </div>
     <div class="title-text">{{ title }}</div>
@@ -10,9 +10,14 @@
 <script setup lang="ts">
 import router from '@/router'
 import { onUnmounted, ref, watch } from 'vue'
-const { title, scrollerRef } = defineProps<{
+const {
+  title,
+  scrollerRef,
+  showBackIcon = true,
+} = defineProps<{
   title: string
   scrollerRef?: HTMLDivElement | null
+  showBackIcon?: boolean
 }>()
 
 const showShadow = ref(false)

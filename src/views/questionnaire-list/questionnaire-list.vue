@@ -1,5 +1,6 @@
 <template>
-  <div class="main-title">订单信息</div>
+  <!-- <div class="main-title">订单信息</div> -->
+  <NavBar :show-back-icon="false" title="订单信息"></NavBar>
   <div class="list-container">
     <ListItem
       v-for="(order, index) in questionnaires"
@@ -15,6 +16,7 @@ import axios from '@axios'
 import { ref, onMounted } from 'vue'
 import type { QuestionnaireResponse } from '@models/components/questionnair-item'
 import ListItem from './list-item.vue'
+import NavBar from '@/components/nav-bar/nav-bar.vue'
 
 const questionnaires = ref<QuestionnaireResponse[]>([])
 const getQuestionnaires = async () => {
@@ -41,6 +43,6 @@ onMounted(async () => {
 
 .list-container {
   margin: 0 12px;
-  border-top: 1px solid #dcdfe6;
+  // border-top: 1px solid #dcdfe6;
 }
 </style>

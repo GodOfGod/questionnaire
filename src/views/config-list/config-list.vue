@@ -1,6 +1,6 @@
 <template>
   <div class="config-list-container">
-    <NavBar title="问卷配置"></NavBar>
+    <NavBar :show-back-icon="false" title="问卷配置"></NavBar>
     <div class="questionnaire-item-container">
       <el-text :style="{ fontSize: '28px' }">问题项</el-text>
       <div class="questionnaire-item-list">
@@ -86,6 +86,9 @@ onMounted(() => {
   fetchConfigList()
 })
 
+/**
+ * 获取配置，包括问题项和所有问卷
+ */
 const fetchConfigList = async () => {
   const { data } = await axios.get('/question/get_questionnaire_config')
 
@@ -100,11 +103,18 @@ const fetchConfigList = async () => {
   }
 }
 
+/**
+ * 开始创建问卷
+ */
 const createQuestionnaire = () => {
   // TODO: 跳转到创建问卷页面
   isCreating.value = true
 }
 
+/**
+ * 添加问题项到问卷
+ * @param item
+ */
 const addToQuestionnaire = (item: QuestionnaireItem) => {
   if (!isCreating.value) return
   // TODO: 验证该问题项是否已存在于 newQuestionnaire.value
@@ -119,15 +129,26 @@ const addToQuestionnaire = (item: QuestionnaireItem) => {
   newQuestionnaire.value.push(item)
 }
 
+/**
+ * 移除问题项
+ * @param item
+ */
 const removeQuestionnaireItem = (item: QuestionnaireItem) => {
   newQuestionnaire.value = newQuestionnaire.value.filter((v) => v.field != item.field)
 }
 
+/**
+ * 取消创建
+ */
 const cancelCreate = () => {
   isCreating.value = false
   newQuestionnaire.value = []
+  questionnaireTitle.value = ''
 }
 
+/**
+ * 保存问卷
+ */
 const saveNewQuestionnaire = async () => {
   if (newQuestionnaire.value.length <= 0) {
     return
@@ -155,13 +176,21 @@ const saveNewQuestionnaire = async () => {
   })
   isCreating.value = false
   newQuestionnaire.value = []
+  questionnaireTitle.value = ''
 }
 
+/**
+ * 跳转到问卷详情页
+ * @param configId
+ */
 const goToQuestionnaireDetail = (configId: string) => {
-  // TODO: 跳转到问卷详情页
   router.push({ name: 'questionnaire', query: { config_id: configId, type: 'check' } })
 }
 
+/**
+ * 复制问卷链接
+ * @param configId
+ */
 const copyLink = async (configId: string) => {
   try {
     await navigator.clipboard.writeText(
@@ -183,7 +212,7 @@ const copyLink = async (configId: string) => {
 
 <style lang="less" scoped>
 .config-list-container {
-  padding: 60px 12px 20px;
+  padding: 0 12px 20px;
 }
 
 .questionnaire-item-list {

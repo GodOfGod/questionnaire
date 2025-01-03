@@ -3,6 +3,7 @@ import QuestionnairContainer from '@/views/questionnaire/questionnair-container.
 import OrderList from '@views/questionnaire-list/questionnaire-list.vue'
 import OrderDetail from '@views/order-detail/order-detail.vue'
 import ConfigList from '@views/config-list/config-list.vue'
+import ManageHome from '@views/manage-home/manage-home.vue'
 
 const router = createRouter({
   // history: createWebHistory(import.meta.env.BASE_URL),
@@ -19,19 +20,26 @@ const router = createRouter({
       component: QuestionnairContainer,
     },
     {
-      path: '/list',
-      name: 'order-list',
-      component: OrderList,
-    },
-    {
       path: '/detail/:id',
       name: 'order-detail',
       component: OrderDetail,
     },
     {
-      path: '/config-list',
-      name: 'config-list',
-      component: ConfigList,
+      path: '/manage-home',
+      // name: 'manage-home',
+      component: ManageHome,
+      children: [
+        {
+          path: '',
+          // name: 'order-list',
+          component: OrderList,
+        },
+        {
+          path: 'config-list',
+          name: 'config-list',
+          component: ConfigList,
+        },
+      ],
     },
     {
       path: '/:pathMatch(.*)*',
