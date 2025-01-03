@@ -4,7 +4,7 @@
       <div class="title">
         <span>{{ index + 1 }}、</span>
         <span v-if="mainTitle" class="custom-title">{{ mainTitle }}</span>
-        <span v-else>宠物：{{ questionnaire.name.value }}</span>
+        <span v-else>宠物：{{ questionnaire.name?.value ?? '' }}</span>
       </div>
       <div class="date">{{ order.date }}</div>
     </div>

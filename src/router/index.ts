@@ -4,6 +4,7 @@ import OrderList from '@views/questionnaire-list/questionnaire-list.vue'
 import OrderDetail from '@views/order-detail/order-detail.vue'
 import ConfigList from '@views/config-list/config-list.vue'
 import ManageHome from '@views/manage-home/manage-home.vue'
+import NotFount from '@views/not-found/not-found.vue'
 
 const router = createRouter({
   // history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,12 +27,13 @@ const router = createRouter({
     },
     {
       path: '/manage-home',
-      // name: 'manage-home',
+      name: 'manage-home',
       component: ManageHome,
+      redirect: '/manage-home/order-list',
       children: [
         {
-          path: '',
-          // name: 'order-list',
+          path: 'order-list',
+          name: 'order-list',
           component: OrderList,
         },
         {
@@ -42,8 +44,12 @@ const router = createRouter({
       ],
     },
     {
+      path: '/404',
+      component: NotFount,
+    },
+    {
       path: '/:pathMatch(.*)*',
-      redirect: '/list',
+      redirect: '/404',
     },
   ],
 })

@@ -1,5 +1,6 @@
 <template>
-  <div class="scroll-container" ref="containerRef">
+  <CompleteEnding :show="isComplete" />
+  <div v-if="!isComplete" class="scroll-container" ref="containerRef">
     <div v-if="init" class="questionnaire-container" :class="{ 'is-modifying': isModifying }">
       <NavBar v-if="showNavBar" :title="navTitle" :scrollerRef="containerRef" />
 
@@ -30,11 +31,25 @@
       <el-button class="submit-btn" type="primary" @click="handleConfirm">{{
         isModifying ? '修改' : '交给你啦'
       }}</el-button>
+      <el-button v-if="isModifying" class="submit-btn" type="danger" @click="handleDelete"
+        >删除</el-button
+      >
       <div class="info-text">
         <el-text type="info">我们将严格保密您的信息，仅用于服务安排。</el-text>
       </div>
     </div>
   </div>
+
+  <el-dialog v-model="showDeleteDialog">
+    <template #header>
+      <span>删除</span>
+    </template>
+    <span>确认删除该问卷</span>
+    <template #footer>
+      <el-button type="danger" @click="handleDeleteConfirm">确认</el-button>
+      <el-button @click="showDeleteDialog = false">取消</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
@@ -49,18 +64,32 @@ import type {
   QuestionnaireResponse,
 } from '@/models/components/questionnair-item'
 import NavBar from '@/components/nav-bar/nav-bar.vue'
-// import logo from '@/assets/logo.png'
+import CompleteEnding from './complete-ending.vue'
+import router from '@/router'
 
+/** 用户填写的问卷数据 */
 const questionnaireConfig = ref<QuestionnaireConfigObj>({})
+/** 记录原本的问卷数据，用于管理员编辑问卷时的数据回填 */
 const originalConfig = ref<QuestionnaireResponse>()
 const route = useRoute()
+/** 管理员备注 */
 const remark = ref('')
+/** 管理员自定义标题 */
 const mainTitle = ref('')
+/** 初始化 */
 const init = ref(false)
+/** 问题项 */
 const customConfigFields = ref<QuestionnaireItem[]>([])
+/** scroll元素 */
 const containerRef = useTemplateRef<HTMLDivElement>('containerRef')
+/** 问卷配置id */
 const configId = ref('')
+/** 问卷是否已经提交 */
+const isComplete = ref(false)
+/** 展示删除提示框 */
+const showDeleteDialog = ref(false)
 
+/** 导航浪标题 */
 const navTitle = computed(() => {
   if (route.query.type === 'edit') {
     return '编辑'
@@ -71,13 +100,19 @@ const navTitle = computed(() => {
   return ''
 })
 
+/** 是否展示导航栏 */
 const showNavBar = computed(() => {
   if (route.query) {
+    // 管理员查看和编辑时需要导航栏
     return ['edit', 'check'].includes(route.query.type as string)
   }
   return false
 })
 
+/** 是否管理员正在编辑 */
+const isModifying = computed(() => !!route.params.id)
+
+/** 获取问卷配置 */
 const fetchQuestionnaireConfig = async (configId: string = '') => {
   try {
     const { data } = await axios.get('/question/get_questionnaire_config_by_id', {
@@ -102,6 +137,7 @@ const fetchQuestionnaireConfig = async (configId: string = '') => {
   }
 }
 
+/** 获取订单信息（用户的问卷数据） */
 const fetchOrderInfo = async (id: string) => {
   try {
     const response = await axios.get(`/question/get_questionnaire_by_id`, {
@@ -128,16 +164,29 @@ onMounted(async () => {
   init.value = true
 })
 
-const isModifying = computed(() => !!route.params.id)
-
+/** 点击提交按钮 */
 const handleConfirm = async () => {
-  if (isModifying.value) {
-    handleUpdate()
-  } else {
-    handleSubmit()
+  if (!configId.value) {
+    ElMessage({
+      message: '啊哦～出现了一些问题',
+      type: 'error',
+    })
+    return
+  }
+  try {
+    isComplete.value = true
+    if (isModifying.value) {
+      await handleUpdate()
+    } else {
+      await handleSubmit()
+    }
+  } catch (error) {
+    isComplete.value = false
+    console.log(error)
   }
 }
 
+/** 用户提交问卷 */
 const handleSubmit = async () => {
   try {
     await axios.post('/question/submit_questionnaire', {
@@ -161,6 +210,7 @@ const handleSubmit = async () => {
   }
 }
 
+/** 管理员修改问卷 */
 const handleUpdate = async () => {
   try {
     await axios.post('/question/update_questionnaire', {
@@ -187,6 +237,38 @@ const handleUpdate = async () => {
     })
   }
 }
+
+/** 管理员删除问卷 */
+const handleDelete = async () => {
+  showDeleteDialog.value = true
+}
+
+const handleDeleteConfirm = async () => {
+  try {
+    await axios.delete(`/question/delete_questionnaire_by_id`, {
+      params: {
+        id: route.params.id,
+      },
+    })
+    ElMessage({
+      message: '删除成功',
+      type: 'success',
+      offset: 100,
+    })
+    // Redirect to the questionnaire list page
+    router.push({
+      name: 'manage-home',
+    })
+  } catch (error) {
+    console.log(error)
+
+    ElMessage({
+      message: '删除失败，请直接联系我',
+      type: 'error',
+      offset: 100,
+    })
+  }
+}
 </script>
 
 <style lang="less">
@@ -200,6 +282,7 @@ const handleUpdate = async () => {
   padding-top: 60px !important;
 }
 .questionnaire-container {
+  min-height: 100%;
   margin: 0 auto;
   padding: 20px 30px 40px 30px;
   background: rgba(255, 255, 255, 0.5);
@@ -221,7 +304,7 @@ const handleUpdate = async () => {
   }
 
   .submit-btn {
-    margin: 20px 0;
+    margin: 20px 0 !important;
     width: 100%;
     & > span {
       font-weight: 800;

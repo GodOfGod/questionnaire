@@ -1,6 +1,6 @@
 <template>
-  <div class="nav-bar" :class="{ shadow: showShadow }" @click="handleBack">
-    <div v-if="showBackIcon" class="back-icon">
+  <div class="nav-bar" :class="{ shadow: showShadow }">
+    <div v-if="showBackIcon" class="back-icon" @click="handleBack">
       <el-icon><ArrowLeft /></el-icon>返回
     </div>
     <div class="title-text">{{ title }}</div>

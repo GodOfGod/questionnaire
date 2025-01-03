@@ -58,10 +58,24 @@
         @click="goToQuestionnaireDetail(item.id)"
       >
         <span>{{ index + 1 }}、{{ item.title }}</span>
-        <el-link type="primary" @click.stop="copyLink(item.id)">复制链接</el-link>
+        <div class="opts">
+          <el-link type="primary" @click.stop="copyLink(item.id)">复制链接</el-link>
+          <el-link type="danger" @click.stop="handleDeleteConfigItem(item.id)">删除</el-link>
+        </div>
       </div>
     </div>
   </div>
+
+  <el-dialog v-model="showDeleteConfigDialog.show">
+    <template #header>
+      <span>删除</span>
+    </template>
+    <span>确认删除该问卷配置</span>
+    <template #footer>
+      <el-button type="danger" @click="handleDeleteConfigConfirm">确认</el-button>
+      <el-button @click="cancelDelete">取消</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
@@ -81,6 +95,11 @@ const isCreating = ref(false)
 const customConfigList = ref<CustomConfigField[]>([])
 
 const questionnaireTitle = ref('')
+
+const showDeleteConfigDialog = ref({
+  configId: '',
+  show: false,
+})
 
 onMounted(() => {
   fetchConfigList()
@@ -188,14 +207,61 @@ const goToQuestionnaireDetail = (configId: string) => {
 }
 
 /**
+ * 删除问卷配置 确认
+ * @param configId
+ */
+const handleDeleteConfigConfirm = async () => {
+  showDeleteConfigDialog.value.show = false
+  const index = customConfigList.value.findIndex(
+    (config) => config.id == showDeleteConfigDialog.value.configId,
+  )
+  if (index >= 0) {
+    customConfigList.value.splice(index, 1)
+  } else {
+    ElMessage({
+      message: '删除问卷配置失败',
+      type: 'error',
+    })
+    return
+  }
+  await axios.delete('/question/delete_questionnaire_config_by_id', {
+    params: {
+      config_id: showDeleteConfigDialog.value.configId,
+    },
+  })
+  ElMessage({
+    message: '删除问卷配置成功',
+    type: 'success',
+  })
+}
+
+/**
+ * 删除问卷配置项 提示
+ * @param configId
+ */
+const handleDeleteConfigItem = (configId: string) => {
+  showDeleteConfigDialog.value.configId = configId
+  showDeleteConfigDialog.value.show = true
+}
+
+/**
+ * 取消删除
+ */
+const cancelDelete = () => {
+  showDeleteConfigDialog.value.show = false
+  showDeleteConfigDialog.value.configId = ''
+}
+
+/**
  * 复制问卷链接
  * @param configId
  */
 const copyLink = async (configId: string) => {
   try {
-    await navigator.clipboard.writeText(
-      `${window.location.origin}/questionnaire/v1#questionnaire?config_id=${configId}`,
-    )
+    const textContent = import.meta.env.PROD
+      ? `${window.location.origin}/questionnaire/v1#questionnaire?config_id=${configId}`
+      : `${window.location.origin}${window.location.pathname}#questionnaire?config_id=${configId}`
+    await navigator.clipboard.writeText(textContent)
     ElMessage({
       message: '复制链接成功',
       type: 'success',
@@ -261,6 +327,12 @@ const copyLink = async (configId: string) => {
     display: flex;
     justify-content: space-between;
     align-items: center;
+
+    .opts {
+      .el-link {
+        margin: 0 8px;
+      }
+    }
   }
 }
 </style>
