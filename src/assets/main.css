@@ -1,0 +1,16 @@
+@import './base.css';
+
+#app {
+  width: 100vw;
+  height: 100vh;
+  margin: 0 auto;
+  font-weight: normal;
+  overflow: hidden;
+}
+
+@font-face {
+  font-family: 'xiao-xiong-ruan-tang';
+  src: url('./fonts/xiaoxiongruantang.ttf');
+  font-weight: normal;
+  font-style: normal;
+}
