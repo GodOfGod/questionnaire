@@ -28,4 +28,13 @@ export default defineConfig({
       '@views': fileURLToPath(new URL('./src/views', import.meta.url)),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          common: ['vue', 'vue-router', 'pinia', 'axios', 'element-plus'],
+        },
+      },
+    },
+  },
 })

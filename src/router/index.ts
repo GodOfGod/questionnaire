@@ -1,14 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import QuestionnairContainer from '@/views/questionnaire/questionnair-container.vue'
-import OrderList from '@views/questionnaire-list/questionnaire-list.vue'
-import OrderDetail from '@views/order-detail/order-detail.vue'
-import ConfigList from '@views/config-list/config-list.vue'
-import ManageHome from '@views/manage-home/manage-home.vue'
-import NotFount from '@views/not-found/not-found.vue'
 
 const router = createRouter({
-  // history: createWebHistory(import.meta.env.BASE_URL),
-  // mode: 'hash',
   history: createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
     {
@@ -18,34 +10,34 @@ const router = createRouter({
     {
       path: '/questionnaire/:id?',
       name: 'questionnaire',
-      component: QuestionnairContainer,
+      component: () => import('@/views/questionnaire/questionnair-container.vue'),
     },
     {
       path: '/detail/:id',
       name: 'order-detail',
-      component: OrderDetail,
+      component: () => import('@views/order-detail/order-detail.vue'),
     },
     {
       path: '/manage-home',
       name: 'manage-home',
-      component: ManageHome,
+      component: () => import('@views/manage-home/manage-home.vue'),
       redirect: '/manage-home/order-list',
       children: [
         {
           path: 'order-list',
           name: 'order-list',
-          component: OrderList,
+          component: () => import('@views/questionnaire-list/questionnaire-list.vue'),
         },
         {
           path: 'config-list',
           name: 'config-list',
-          component: ConfigList,
+          component: () => import('@views/config-list/config-list.vue'),
         },
       ],
     },
     {
       path: '/404',
-      component: NotFount,
+      component: () => import('@views/not-found/not-found.vue'),
     },
     {
       path: '/:pathMatch(.*)*',
