@@ -46,7 +46,7 @@
     </template>
     <span>确认删除该问卷</span>
     <template #footer>
-      <el-button type="danger" @click="handleDeleteConfirm">确认</el-button>
+      <el-button type="primary" @click="handleDeleteConfirm">确认</el-button>
       <el-button @click="showDeleteDialog = false">取消</el-button>
     </template>
   </el-dialog>
@@ -121,9 +121,17 @@ const fetchQuestionnaireConfig = async (configId: string = '') => {
       },
     })
     const configFields = JSON.parse(data.custom_config_fields) as string[]
-    customConfigFields.value = configFields.map((field) =>
-      data.questionnaire_item_list.find((config: QuestionnaireItem) => config.field === field),
-    )
+    customConfigFields.value = configFields.map((field) => {
+      const config = data.questionnaire_item_list.find(
+        (config: QuestionnaireItem) => config.field === field,
+      )
+      return {
+        ...config,
+        inputType: config.input_type,
+        needRemark: false,
+        required: true,
+      }
+    })
 
     // 编辑时不需要该配置
     if (!isModifying.value) {
@@ -174,14 +182,13 @@ const handleConfirm = async () => {
     return
   }
   try {
-    isComplete.value = true
     if (isModifying.value) {
       await handleUpdate()
     } else {
+      isComplete.value = true
       await handleSubmit()
     }
   } catch (error) {
-    isComplete.value = false
     console.log(error)
   }
 }

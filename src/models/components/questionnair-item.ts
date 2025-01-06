@@ -1,4 +1,4 @@
-type inputType = 'text' | 'number' | 'email' | 'tel' | 'textarea' | 'radio' | 'checkbox'
+type inputType = 'input' | 'number' | 'textarea' | 'radio' | 'checkbox' | ''
 
 type Field =
   | 'phone'
@@ -13,12 +13,12 @@ type Field =
   | 'food'
 
 export interface QuestionnaireItem {
-  field: Field
+  field: Field | string
   title: string
   required?: boolean
-  inputType: inputType[]
+  inputType: inputType
   needRemark: boolean
-  options?: string[]
+  options?: string[] | string
 }
 
 export interface QuestionnaireResponse {

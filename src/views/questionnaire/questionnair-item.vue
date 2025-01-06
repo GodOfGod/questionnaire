@@ -7,10 +7,24 @@
     </div>
 
     <div class="input-container">
-      <el-radio-group v-if="inputType.includes('radio')" v-model="modelValue">
-        <el-radio v-for="option in options" :key="option" :value="option">{{ option }}</el-radio>
+      <el-radio-group v-if="inputType === 'radio'" v-model="modelValue">
+        <el-radio
+          v-for="option in inputOptions"
+          :key="option"
+          :value="option"
+          :label="option"
+        ></el-radio>
       </el-radio-group>
-      <el-input v-else-if="inputType.includes('text')" v-model="modelValue"></el-input>
+      <el-input v-else-if="inputType === 'input'" v-model="modelValue"></el-input>
+
+      <el-checkbox-group v-else-if="inputType === 'checkbox'" v-model="checkboxModelValue">
+        <el-checkbox
+          v-for="option in inputOptions"
+          :key="option"
+          :value="option"
+          :label="option"
+        ></el-checkbox>
+      </el-checkbox-group>
     </div>
 
     <div v-if="needRemark" class="remark-container">
@@ -22,6 +36,7 @@
 
 <script setup lang="ts">
 import type { QuestionnaireItem } from '@models/components/questionnair-item'
+import { computed } from 'vue'
 const { order, required, title, needRemark, inputType, options } = defineProps<
   {
     order: number
@@ -29,6 +44,26 @@ const { order, required, title, needRemark, inputType, options } = defineProps<
 >()
 
 const modelValue = defineModel()
+
+const inputOptions = computed(() => {
+  return JSON.parse(options as string)
+})
+
+const checkboxModelValue = computed({
+  get() {
+    let value = []
+    try {
+      value = JSON.parse(modelValue.value as string)
+    } catch (error) {
+      console.log(error)
+      value = []
+    }
+    return value
+  },
+  set(v) {
+    modelValue.value = JSON.stringify(v)
+  },
+})
 
 // const updateValue = (value: string) => {
 //   console.log(value, modelValue.value)

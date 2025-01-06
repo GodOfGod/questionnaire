@@ -6,7 +6,12 @@
         <span v-if="mainTitle" class="custom-title">{{ mainTitle }}</span>
         <span v-else>宠物：{{ questionnaire.name?.value ?? '' }}</span>
       </div>
-      <div class="date">{{ order.date }}</div>
+      <div class="date">
+        <span>
+          {{ order.date }}
+        </span>
+        <span class="address">地址：{{ questionnaire.address?.value }}</span>
+      </div>
     </div>
   </div>
 </template>
@@ -71,6 +76,16 @@ const goToDetail = (id: string) => {
 .date {
   font-size: 12px;
   color: #888;
+  display: flex;
+
+  .address {
+    display: inline-block;
+    margin-left: 8px;
+    max-width: calc(100% - 82px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .opts-container {

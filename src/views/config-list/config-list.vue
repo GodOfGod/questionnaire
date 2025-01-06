@@ -13,40 +13,14 @@
       </div>
     </div>
 
-    <div class="create-questionnaire" :class="{ is_creating: isCreating }">
-      <template v-if="isCreating">
-        <el-text :style="{ fontSize: '16px', fontWeight: 'bold' }">问卷标题</el-text>
-        <el-input v-model="questionnaireTitle" class="title-input"></el-input>
-        <el-text :style="{ fontSize: '16px', fontWeight: 'bold' }">问题</el-text>
-        <div class="questionnaire-item-list new-questionnaire">
-          <el-tag
-            v-for="item in newQuestionnaire"
-            :key="item.field"
-            closable
-            effect="dark"
-            type="success"
-            @close="removeQuestionnaireItem(item)"
-            @click="addToQuestionnaire(item)"
-            >{{ item.title }}</el-tag
-          >
-        </div>
-      </template>
-
-      <div class="opt-btns">
-        <template v-if="isCreating">
-          <el-button type="primary" @click="saveNewQuestionnaire"> 保存 </el-button>
-          <el-button type="danger" @click="cancelCreate"> 取消 </el-button>
-        </template>
-        <el-button v-else type="primary" @click="createQuestionnaire"> 创建问卷 </el-button>
-      </div>
-
-      <div class="opt-btns">
-        <template v-if="isCreating">
-          <el-button type="primary" @click="saveNewQuestionnaire"> 保存 </el-button>
-          <el-button type="danger" @click="cancelCreate"> 取消 </el-button>
-        </template>
-        <el-button v-else type="primary" @click="createQuestionnaire"> 创建问题 </el-button>
-      </div>
+    <div class="create-questionnaire create-container">
+      <CreateQuestionItem @on-confirm="fetchQuestionnaireItemList"></CreateQuestionItem>
+      <CreateQuestionnaireItem
+        :new-questionnaire="newQuestionnaire"
+        @on-add-config="handleAddConfig"
+        @on-clear-new-question="handleClearNewQuestion"
+        @on-remove-question="handleRemoveQuestion"
+      ></CreateQuestionnaireItem>
     </div>
 
     <div class="config-list">
@@ -85,17 +59,19 @@ import type { QuestionnaireItem, CustomConfigField } from '@models/components/qu
 import { ElMessage } from 'element-plus'
 import NavBar from '@/components/nav-bar/nav-bar.vue'
 import router from '@/router'
+import CreateQuestionItem from './create-question-item.vue'
+import CreateQuestionnaireItem from './create-questionnaire.vue'
 
+/** 所有的问题项 */
 const questionnairItemList = ref<QuestionnaireItem[]>()
 
-const newQuestionnaire = ref<QuestionnaireItem[]>([])
-
-const isCreating = ref(false)
-
+/** 自定义的问卷列表 */
 const customConfigList = ref<CustomConfigField[]>([])
 
-const questionnaireTitle = ref('')
+/** 正在新建的问卷 */
+const newQuestionnaire = ref<QuestionnaireItem[]>([])
 
+/** 删除问卷配置提示框 */
 const showDeleteConfigDialog = ref({
   configId: '',
   show: false,
@@ -103,7 +79,13 @@ const showDeleteConfigDialog = ref({
 
 onMounted(() => {
   fetchConfigList()
+  fetchQuestionnaireItemList()
 })
+
+const fetchQuestionnaireItemList = async () => {
+  const { data } = await axios.get('/question/get_questionnaire_item_list')
+  questionnairItemList.value = data
+}
 
 /**
  * 获取配置，包括问题项和所有问卷
@@ -111,7 +93,7 @@ onMounted(() => {
 const fetchConfigList = async () => {
   const { data } = await axios.get('/question/get_questionnaire_config')
 
-  questionnairItemList.value = data.questionnaire_item_list
+  // questionnairItemList.value = data.questionnaire_item_list
   if (data.custom_config_list?.length) {
     customConfigList.value = data.custom_config_list.map(
       (item: { id: string; config_fields: string }) => ({
@@ -120,82 +102,6 @@ const fetchConfigList = async () => {
       }),
     )
   }
-}
-
-/**
- * 开始创建问卷
- */
-const createQuestionnaire = () => {
-  // TODO: 跳转到创建问卷页面
-  isCreating.value = true
-}
-
-/**
- * 添加问题项到问卷
- * @param item
- */
-const addToQuestionnaire = (item: QuestionnaireItem) => {
-  if (!isCreating.value) return
-  // TODO: 验证该问题项是否已存在于 newQuestionnaire.value
-  const exist = newQuestionnaire.value.find((v) => v.field == item.field)
-  if (exist) {
-    ElMessage({
-      message: '该问题项已添加',
-      type: 'warning',
-    })
-    return
-  }
-  newQuestionnaire.value.push(item)
-}
-
-/**
- * 移除问题项
- * @param item
- */
-const removeQuestionnaireItem = (item: QuestionnaireItem) => {
-  newQuestionnaire.value = newQuestionnaire.value.filter((v) => v.field != item.field)
-}
-
-/**
- * 取消创建
- */
-const cancelCreate = () => {
-  isCreating.value = false
-  newQuestionnaire.value = []
-  questionnaireTitle.value = ''
-}
-
-/**
- * 保存问卷
- */
-const saveNewQuestionnaire = async () => {
-  if (newQuestionnaire.value.length <= 0) {
-    return
-  }
-  if (!questionnaireTitle.value) {
-    ElMessage({
-      message: '请填写问卷标题',
-      type: 'warning',
-    })
-    return
-  }
-  const { data } = await axios.post('/question/create_questionnaire', {
-    config_fields: JSON.stringify(newQuestionnaire.value.map((q) => q.field)),
-    title: questionnaireTitle.value,
-  })
-  if (data.config_fields.length) {
-    customConfigList.value.push({
-      ...data,
-      config_fields: JSON.parse(data.config_fields),
-    })
-  }
-  ElMessage({
-    message: '创建问卷成功',
-    type: 'success',
-  })
-  isCreating.value = false
-  newQuestionnaire.value = []
-  questionnaireTitle.value = ''
 }
 
 /**
@@ -274,6 +180,49 @@ const copyLink = async (configId: string) => {
     console.error('Error copying text to clipboard:', error)
   }
 }
+
+/**
+ * 添加问题项到问卷
+ * @param item
+ */
+const addToQuestionnaire = (item: QuestionnaireItem) => {
+  // 验证该问题项是否已存在于 newQuestionnaire.value
+  const exist = newQuestionnaire.value.find((v) => v.field == item.field)
+  if (exist) {
+    ElMessage({
+      message: '该问题项已添加',
+      type: 'warning',
+    })
+    return
+  }
+  newQuestionnaire.value.push(item)
+}
+
+/**
+ * 添加新问卷
+ * @param item
+ */
+const handleAddConfig = (item: CustomConfigField) => {
+  customConfigList.value.push(item)
+}
+
+/**
+ * 移除问题项
+ * @param item
+ */
+const handleRemoveQuestion = (item: QuestionnaireItem) => {
+  const index = newQuestionnaire.value.findIndex((v) => v.field == item.field)
+  if (index >= 0) {
+    newQuestionnaire.value.splice(index, 1)
+  }
+}
+
+/**
+ * 清空newQuestinonaire
+ */
+const handleClearNewQuestion = () => {
+  newQuestionnaire.value = []
+}
 </script>
 
 <style lang="less" scoped>
@@ -291,24 +240,14 @@ const copyLink = async (configId: string) => {
   background-color: #409eff29;
 }
 
-.create-questionnaire {
+.create-container {
   margin: 20px 0;
-  // border: 2px solid #67c23a;
   border-radius: 4px;
-  padding: 12px;
+}
 
+.create-questionnaire {
   .title-input {
     margin: 12px 0;
-  }
-
-  .opt-btns {
-    width: 100%;
-    display: flex;
-    margin-bottom: 12px;
-
-    .el-button {
-      flex: 1;
-    }
   }
 
   .new-questionnaire {
